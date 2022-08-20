@@ -34,7 +34,8 @@ void MessageQueue<T>::send(T &&msg)
     std::lock_guard<std::mutex> uLock(_mutex);
 
     // add vector to queue
-    _queue.push_back(std::move(msg));
+    _queue.clear();
+    _queue.emplace_back(std::move(msg));
     _cond.notify_one(); // notify client after pushing new Vehicle into vector    
 }
 
@@ -43,6 +44,11 @@ void MessageQueue<T>::send(T &&msg)
 
 
 TrafficLight::TrafficLight()
+{
+    _currentPhase = TrafficLightPhase::red;
+}
+
+TrafficLight::~TrafficLight()
 {
     _currentPhase = TrafficLightPhase::red;
 }
@@ -97,7 +103,6 @@ void TrafficLight::cycleThroughPhases()
         long timeSinceLastUpdate = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lastUpdate).count();
         if (timeSinceLastUpdate >= cycleDuration)
         {
-            std::lock_guard<std::mutex> lock(_mutex);
             switch(_currentPhase) {
                 case TrafficLightPhase::red : 
                     _currentPhase = TrafficLightPhase::green;
